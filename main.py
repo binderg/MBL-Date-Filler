@@ -7,9 +7,9 @@ from datetime import datetime
 import sys
 
 # Global variables for placeholder strings
-DATE_1_PLACEHOLDER = "{{Date_1}}"
-DATE_2_PLACEHOLDER = "{{Date_2}}"
-DATE_3_PLACEHOLDER = "{{Date_3}}"
+DATE_1_PLACEHOLDER = "{Date_1}"
+DATE_2_PLACEHOLDER = "{Date_2}"
+DATE_3_PLACEHOLDER = "{Date_3}"
 
 def replace_dates_in_docs(src_folder, dest_folder, date1, date2, date3):
     for filename in os.listdir(src_folder):
