@@ -1,4 +1,5 @@
 import os
+import re
 from docx import Document
 from tkinter import Tk, Label, Entry, Button, filedialog, StringVar, messagebox
 import ttkbootstrap as ttk
@@ -7,9 +8,9 @@ from datetime import datetime
 import sys
 
 # Global variables for placeholder strings
-DATE_1_PLACEHOLDER = "{Date_1}"
-DATE_2_PLACEHOLDER = "{Date_2}"
-DATE_3_PLACEHOLDER = "{Date_3}"
+DATE_1_PATTERN = re.compile(r'_{1,}, 20_{1,}')
+DATE_2_PATTERN = re.compile(r'_{1,} day of _{1,}, 20_{1,}')
+DATE_3_PATTERN = re.compile(r'_{1,} day of _{1,}, in the year 20_{1,}')
 
 def replace_dates_in_docs(src_folder, dest_folder, date1, date2, date3):
     for filename in os.listdir(src_folder):
@@ -18,13 +19,20 @@ def replace_dates_in_docs(src_folder, dest_folder, date1, date2, date3):
             dest_path = os.path.join(dest_folder, filename)
             doc = Document(src_path)
             for paragraph in doc.paragraphs:
-                if DATE_1_PLACEHOLDER in paragraph.text:
-                    paragraph.text = paragraph.text.replace(DATE_1_PLACEHOLDER, date1)
-                if DATE_2_PLACEHOLDER in paragraph.text:
-                    paragraph.text = paragraph.text.replace(DATE_2_PLACEHOLDER, date2)
-                if DATE_3_PLACEHOLDER in paragraph.text:
-                    paragraph.text = paragraph.text.replace(DATE_3_PLACEHOLDER, date3)
+                paragraph_text = paragraph.text
+
+                # Replace using regex patterns, applied in specific order (because regex 1 is included in 2)
+                if DATE_2_PATTERN.search(paragraph_text):
+                    paragraph_text = DATE_2_PATTERN.sub(date2, paragraph_text)
+                elif DATE_3_PATTERN.search(paragraph_text):
+                    paragraph_text = DATE_3_PATTERN.sub(date3, paragraph_text)
+                else:
+                    paragraph_text = DATE_1_PATTERN.sub(date1, paragraph_text)
+
+                # Update the paragraph text
+                paragraph.text = paragraph_text
             doc.save(dest_path)
+
 
 def browse_folder():
     folder_selected = filedialog.askdirectory()
@@ -54,9 +62,9 @@ def start_replacement():
     date3 = f"{selected_date.day}{day_suffix} day of {selected_date.strftime('%B, in the year %Y')}"
 
     # Display variables
-    date1_var.set(f"{DATE_1_PLACEHOLDER}: {date1}")
-    date2_var.set(f"{DATE_2_PLACEHOLDER}: {date2}")
-    date3_var.set(f"{DATE_3_PLACEHOLDER}: {date3}")
+    date1_var.set(f"{DATE_1_PATTERN.pattern}: {date1}")
+    date2_var.set(f"{DATE_2_PATTERN.pattern}: {date2}")
+    date3_var.set(f"{DATE_3_PATTERN.pattern}: {date3}")
 
     # Create a new folder named with the current date
     date_folder_name = selected_date.strftime('%m-%d-%Y')
@@ -83,9 +91,9 @@ date2_var = StringVar()
 date3_var = StringVar()
 
 # Display placeholders and example dates at the top
-ttk.Label(root, text=f"{DATE_1_PLACEHOLDER}: Example: {datetime.now().strftime('%B %d, %Y')}", font=("Helvetica", 12, "bold")).grid(row=0, column=0, columnspan=3, pady=10)
-ttk.Label(root, text=f"{DATE_2_PLACEHOLDER}: Example: {datetime.now().day}th day of {datetime.now().strftime('%B, %Y')}", font=("Helvetica", 12, "bold")).grid(row=1, column=0, columnspan=3, pady=5)
-ttk.Label(root, text=f"{DATE_3_PLACEHOLDER}: Example: {datetime.now().day}th day of {datetime.now().strftime('%B, in the year %Y')}", font=("Helvetica", 12, "bold")).grid(row=2, column=0, columnspan=3, pady=5)
+ttk.Label(root, text=f"{DATE_1_PATTERN.pattern}: Example: {datetime.now().strftime('%B %d, %Y')}", font=("Helvetica", 12, "bold")).grid(row=0, column=0, columnspan=3, pady=10)
+ttk.Label(root, text=f"{DATE_2_PATTERN.pattern}: Example: {datetime.now().day}th day of {datetime.now().strftime('%B, %Y')}", font=("Helvetica", 12, "bold")).grid(row=1, column=0, columnspan=3, pady=5)
+ttk.Label(root, text=f"{DATE_3_PATTERN.pattern}: Example: {datetime.now().day}th day of {datetime.now().strftime('%B, in the year %Y')}", font=("Helvetica", 12, "bold")).grid(row=2, column=0, columnspan=3, pady=5)
 
 ttk.Label(root, text="Select the folder containing .docx files:", font=("Helvetica", 12)).grid(row=3, column=0, columnspan=3, pady=10)
 ttk.Entry(root, textvariable=folder_var, width=50).grid(row=4, column=0, columnspan=2, padx=10)
