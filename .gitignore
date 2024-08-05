@@ -35,8 +35,3 @@ Thumbs.db
 build/
 dist/
 *.egg-info/
-
-# Ignore icons
-*.ico
-*.afphoto
-*.png
