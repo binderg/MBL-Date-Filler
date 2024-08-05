@@ -11,7 +11,7 @@ import sys
 DATE_1_PATTERN = re.compile(r'_{1,}, 20_{1,}')
 DATE_2_PATTERN = re.compile(r'_{1,} day of _{1,}, 20_{1,}')
 DATE_3_PATTERN = re.compile(r'_{1,} day of _{1,}, in the year 20_{1,}')
-DATE_4_PATTERN = re.compile(r'Date:\s*_{1,},\s*20_{1,}')
+DATE_4_PATTERN = re.compile(r'Date:')
 
 def replace_dates_in_docs(src_folder, dest_folder, date1, date2, date3, date4):
     for filename in os.listdir(src_folder):
@@ -20,20 +20,19 @@ def replace_dates_in_docs(src_folder, dest_folder, date1, date2, date3, date4):
             dest_path = os.path.join(dest_folder, filename)
             doc = Document(src_path)
             for paragraph in doc.paragraphs:
-                paragraph_text = paragraph.text
+                for run in paragraph.runs:
+                    original_text = run.text
 
                 # Replace using regex patterns, applied in specific order (1 is included in 2 and therefore causes mess-ups)
-                if DATE_4_PATTERN.search(paragraph_text):
-                    paragraph_text = DATE_4_PATTERN.sub(f"Date: {date1}", paragraph_text)
-                elif DATE_2_PATTERN.search(paragraph_text):
-                    paragraph_text = DATE_2_PATTERN.sub(date2, paragraph_text)
-                elif DATE_3_PATTERN.search(paragraph_text):
-                    paragraph_text = DATE_3_PATTERN.sub(date3, paragraph_text)
-                else:
-                    paragraph_text = DATE_1_PATTERN.sub(date1, paragraph_text)
+                    if DATE_4_PATTERN.search(original_text):
+                        run.text = DATE_4_PATTERN.sub(f"Date: {date1}", original_text)
+                    elif DATE_2_PATTERN.search(original_text):
+                        run.text = DATE_2_PATTERN.sub(date2, original_text)
+                    elif DATE_3_PATTERN.search(original_text):
+                        run.text = DATE_3_PATTERN.sub(date3, original_text)
+                    else:
+                        run.text = DATE_1_PATTERN.sub(date1, original_text)
 
-                # Update the paragraph text
-                paragraph.text = paragraph_text
             doc.save(dest_path)
 
 def browse_folder():
